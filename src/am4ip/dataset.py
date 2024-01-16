@@ -7,12 +7,14 @@ from typing import Optional, Callable
 import matplotlib.pyplot as plt
 import numpy as np
 import random
+import matplotlib.patches as mpatches
+
 
 from .utils import expanded_join
 
 
 class CropSegmentationDataset(Dataset):
-    ROOT_PATH: str = "/net/ens/am4ip/datasets/project-dataset"
+    ROOT_PATH: str = "C:/Users/budai/Downloads/am4ip-lab3-master_my/am4ip-lab3-master/project-dataset"    
     id2cls: dict = {0: "background",
                     1: "crop",
                     2: "weed",
@@ -88,27 +90,39 @@ class CropSegmentationDataset(Dataset):
 
     def visualize_data(self, num_samples=4):
         fig, axs = plt.subplots(num_samples, 3, figsize=(10, num_samples*3))
+        all_labels = []
 
         for i in range(num_samples):
             # Select a random sample from the dataset
             idx = random.randint(0, len(self)-1)
             img, label = self[idx]
 
-            # Convert PIL Images to numpy arrays for visualization
-            img = np.array(img)
-            label = np.array(label)
+            # Convert PyTorch tensors to numpy arrays for visualization
+            img = img.permute(1, 2, 0).numpy()
+            label = label.numpy()
+
+            # Normalize the image data to [0, 1] range
+            img = (img - img.min()) / (img.max() - img.min())
 
             # Create a color map for the label
-            cmap = plt.get_cmap('tab20b', np.max(label)-np.min(label)+1)
+            cmap = plt.get_cmap('tab20b', len(self.id2cls))
 
             # Plot the image, label, and label projected onto the image
-            axs[i, 0].imshow(img)
+            axs[i, 0].imshow(img)            
             axs[i, 0].set_title('Image')
-            axs[i, 1].imshow(label, cmap=cmap, vmin=np.min(label), vmax=np.max(label))
+            axs[i, 1].imshow(label, cmap=cmap, vmin=0, vmax=len(self.id2cls)-1)
             axs[i, 1].set_title('Label')
             axs[i, 2].imshow(img)
-            axs[i, 2].imshow(label, cmap=cmap, vmin=np.min(label), vmax=np.max(label), alpha=0.5)
+            axs[i, 2].imshow(label, cmap=cmap, vmin=0, vmax=len(self.id2cls)-1, alpha=0.5)
             axs[i, 2].set_title('Label projected onto image')
+
+            # Collect unique labels from all images
+            all_labels.extend(np.unique(label))
+
+        # Create legend
+        unique_labels = np.unique(all_labels)
+        legend_patches = [mpatches.Patch(color=cmap(i/(len(self.id2cls)-1)), label=self.id2cls[i]) for i in unique_labels]
+        plt.legend(handles=legend_patches, bbox_to_anchor=(1.05, 1), loc='upper left')
 
         # Remove axis labels
         for ax in axs.ravel():

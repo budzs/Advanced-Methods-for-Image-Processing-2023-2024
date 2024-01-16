@@ -28,3 +28,14 @@ class TotalLoss(_Loss):
 
     def forward(self, inp: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         raise NotImplementedError
+
+class DiceLoss(_Loss):
+    def __init__(self, eps=1e-7):
+        super(DiceLoss, self).__init__()
+        self.eps = eps
+
+    def forward(self, inp: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        intersection = (inp * target).sum(dim=(2, 3))
+        union = inp.sum(dim=(2, 3)) + target.sum(dim=(2, 3))
+        dice = (2. * intersection + self.eps) / (union + self.eps)
+        return 1. - dice.mean()
