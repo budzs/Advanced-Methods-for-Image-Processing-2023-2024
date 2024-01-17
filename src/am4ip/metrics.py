@@ -84,17 +84,16 @@ nMAE = NormalizedMeanAbsoluteError
 
 def IOU(annotation, prediction):
     ious = []
-    for i in range(3):
-        truth = annotation[i,:,:]
-        pred = prediction[i,:,:]
-        both = truth + pred
-        ones = torch.ones_like(both)
-        intersection = ones[both == 2]
-        union = ones[both > 0]
-        iou = sum(intersection) / sum(union)
-        ious.append(iou)
+    for i in range(5):
+        truth = (annotation == i)
+        pred = (prediction == i)
+        intersection = torch.logical_and(truth, pred)
+        union = torch.logical_or(truth, pred)
+        iou = intersection.float().sum() / (union.float().sum() + 1e-7)  # Add a small constant to avoid division by zero
+        ious.append(iou.item())
 
     return ious
+
 def EvaluateNetwork(model, test_loader):
     id2cls = {0: "background",
               1: "crop",
@@ -105,10 +104,8 @@ def EvaluateNetwork(model, test_loader):
     model = model.to(device)
     model.eval()
 
-    accuracies = [0.0] * 5  # Initialize accuracies for each class
+    ious = [0.0] * 5  # Initialize IoUs for each class
     total = [0] * 5  # Initialize total count for each class
-    total_correct = 0
-    total_pixels = 0
 
     with torch.no_grad():
         for batch in test_loader:
@@ -118,26 +115,26 @@ def EvaluateNetwork(model, test_loader):
             output = model(img)
             preds = output.argmax(dim=1).cpu()
 
+            # Convert target and preds to one-hot encoding
+            target_one_hot = torch.nn.functional.one_hot(target, num_classes=5)
+            preds_one_hot = torch.nn.functional.one_hot(preds, num_classes=5)
+
+            # Calculate IoU for each class
+            iou_per_class = IOU(target_one_hot, preds_one_hot)
+
             for c in range(5):
-                correct_pixels = (preds == c) & (target == c)
-                total_pixels_class = (target == c).sum().item()
-                accuracies[c] += correct_pixels.sum().item()
-                total[c] += total_pixels_class
+                ious[c] += iou_per_class[c]
+                total[c] += 1
 
-                total_correct += correct_pixels.sum().item()
-                total_pixels += total_pixels_class
+    # Calculate mean IoU for each class
+    mean_ious = [ious[c] / total[c] if total[c] > 0 else 0 for c in range(5)]
 
-    # Calculate mean accuracy for each class
-    mean_accuracies = [accuracies[c] / total[c] if total[c] > 0 else 0 for c in range(5)]
-
-    # Calculate overall accuracy
-    overall_accuracy = total_correct / total_pixels
-
-    # Print accuracies for each class
+    # Print IoUs for each class
     for c in range(5):
-        print(f"Class {id2cls[c]} accuracy: {round(mean_accuracies[c], 6)}")
+        print(f"Class {id2cls[c]} IoU: {mean_ious[c]:.6f}")
 
-    print(f"Overall accuracy: {round(overall_accuracy, 6)}")
+    # Calculate and print mean IoU across all classes
+    mean_iou = sum(mean_ious) / len(mean_ious)
+    print(f"Mean IoU: {mean_iou:.6f}")
 
-    return mean_accuracies, overall_accuracy
-
+    return mean_ious, mean_iou

@@ -44,7 +44,7 @@ class BaselineTrainer:
                 avg_loss += loss.item()
                 n_batch += 1
 
-                print(f"\r{i+1}/{len(train_data_loader)}: loss = {avg_loss / n_batch}", end='')
+                print(f"{i+1}/{len(train_data_loader)}: loss = {avg_loss / n_batch}")
             print()
 
             # Validation phase
@@ -69,14 +69,15 @@ class BaselineTrainer:
     
 def IOU(annotation, prediction):
     ious = []
-    for i in range(3):
+    for i in range(5):
         truth = annotation[i,:,:]
         pred = prediction[i,:,:]
         both = truth + pred
         ones = torch.ones_like(both)
         intersection = ones[both == 2]
         union = ones[both > 0]
-        iou = sum(intersection) / sum(union)
+        epsilon = 1e-7  # Small constant to avoid division by zero
+        iou = sum(intersection) / (sum(union) + epsilon)
         ious.append(iou)
 
     return sum(ious) / len(ious)  # return mean IoU

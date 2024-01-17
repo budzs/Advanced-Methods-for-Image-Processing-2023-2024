@@ -11,7 +11,7 @@ from am4ip.losses import TotalLoss, DiceLoss
 from am4ip.metrics import nMAE, EvaluateNetwork
 
 from torchvision.transforms import Resize
-img_size = 128
+img_size = 256
 transform = Compose([
     PILToTensor(),
     Resize((img_size, img_size), antialias=True),  # Resize  
@@ -23,22 +23,23 @@ target_transform = Compose([
     Resize((img_size, img_size), antialias=True),  # Resize  
     lambda z: z.to(dtype=torch.int64).squeeze(0)
 ])
-batch_size = 64
-lr = 1e-3
+batch_size = 32
+lr = 1e-4
 epoch = 1
 input_size = img_size*img_size*3
 hidden_size = 1000
 
 dataset = CropSegmentationDataset(transform=transform, target_transform=target_transform)
 val_dataset = CropSegmentationDataset(set_type="val", transform=transform, target_transform=target_transform)
-dataset.visualize_data()
+# dataset.visualize_data()
 num_classes = dataset.get_class_number()
+print("Number of classes:", num_classes)
 train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
 # Define the loss
-loss = torch.nn.CrossEntropyLoss()
-#loss = DiceLoss()
+#loss = torch.nn.CrossEntropyLoss()
+loss = DiceLoss()
 
 # Train CNN
 # model = torch.nn.Sequential(torch.nn.Conv2d(3, 32, (3,3), padding="same"),
