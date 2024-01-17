@@ -78,6 +78,9 @@ class MSE(NoReferenceIQMetric):
     def __call__(self, im: torch.Tensor, *args) -> torch.Tensor:
         return torch.mean(im ** 2, dim=[1, 2, 3])  # Mean Squared Error over C x H x W
     
+# Aliases
+nMAE = NormalizedMeanAbsoluteError
+
 
 def IOU(annotation, prediction):
     ious = []
@@ -92,14 +95,20 @@ def IOU(annotation, prediction):
         ious.append(iou)
 
     return ious
-
 def EvaluateNetwork(model, test_loader):
+    id2cls = {0: "background",
+              1: "crop",
+              2: "weed",
+              3: "partial-crop",
+              4: "partial-weed"}
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
     model.eval()
 
     accuracies = [0.0] * 5  # Initialize accuracies for each class
     total = [0] * 5  # Initialize total count for each class
+    total_correct = 0
+    total_pixels = 0
 
     with torch.no_grad():
         for batch in test_loader:
@@ -111,21 +120,24 @@ def EvaluateNetwork(model, test_loader):
 
             for c in range(5):
                 correct_pixels = (preds == c) & (target == c)
-                total_pixels = (target == c).sum().item()
+                total_pixels_class = (target == c).sum().item()
                 accuracies[c] += correct_pixels.sum().item()
-                total[c] += total_pixels
+                total[c] += total_pixels_class
+
+                total_correct += correct_pixels.sum().item()
+                total_pixels += total_pixels_class
 
     # Calculate mean accuracy for each class
     mean_accuracies = [accuracies[c] / total[c] if total[c] > 0 else 0 for c in range(5)]
 
+    # Calculate overall accuracy
+    overall_accuracy = total_correct / total_pixels
+
     # Print accuracies for each class
     for c in range(5):
-        print(f"Class {c} accuracy: {mean_accuracies[c]}")
+        print(f"Class {id2cls[c]} accuracy: {round(mean_accuracies[c], 6)}")
 
-    return mean_accuracies
+    print(f"Overall accuracy: {round(overall_accuracy, 6)}")
 
+    return mean_accuracies, overall_accuracy
 
-
-
-# Aliases
-nMAE = NormalizedMeanAbsoluteError
