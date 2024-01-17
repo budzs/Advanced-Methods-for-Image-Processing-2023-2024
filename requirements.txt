@@ -1,5 +1,5 @@
 torch
-numpy~=1.21.3
+numpy~=1.26.3
 Pillow~=9.1.1
 torchvision
 matplotlib~=3.4.3

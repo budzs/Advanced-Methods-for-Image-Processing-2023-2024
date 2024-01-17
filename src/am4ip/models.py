@@ -33,10 +33,13 @@ class UNet(nn.Module):
         self.decoder = nn.Sequential(
             ConvBlock(1024, 512),
             nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2),
-            ConvBlock(256, 128),
+            ConvBlock(256, 256),
+            nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2),
+            ConvBlock(128, 128),
             nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2),
             ConvBlock(64, 64),
             nn.ConvTranspose2d(64, 32, kernel_size=2, stride=2),
+            ConvBlock(32, 32),
         )
         
         self.final = nn.Conv2d(32, num_classes, kernel_size=1)
@@ -58,6 +61,7 @@ class SimpleNN(nn.Module):
         self.fc3 = nn.Linear(hidden_size, num_classes)
 
     def forward(self, x):
+        x = x.view(x.size(0), -1)  # Flatten the input tensor
         out = self.fc1(x)
         out = self.relu(out)
         out = self.fc2(out)

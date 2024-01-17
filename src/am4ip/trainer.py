@@ -1,30 +1,30 @@
-
 from typing import Callable, List
 import torch
 import torch.utils.data as data
-
 
 class BaselineTrainer:
     def __init__(self, model: torch.nn.Module,
                  loss: Callable,
                  optimizer: torch.optim.Optimizer,
                  use_cuda=True):
+        self.model = model
         self.loss = loss
         self.use_cuda = use_cuda
         self.optimizer = optimizer
 
-        if use_cuda:
-            self.model = model.to(device="cuda:0")
+        if self.use_cuda:
+            self.model = self.model.to(device="cuda:1")
+            print("CUDA is available")
         else:
-            self.model = model
+            print("CUDA is not available")
 
-    def fit(self, train_data_loader: data.DataLoader,
-            epoch: int):
-        avg_loss = 0.
-        self.model.training = True
+    def fit(self, train_data_loader: data.DataLoader, val_data_loader: data.DataLoader, epoch: int):
         for e in range(epoch):
-            print(f"Start epoch {e+1}/{epoch}")
+            # Training phase
+            self.model.train()
+            avg_loss = 0.
             n_batch = 0
+            print(f"Start epoch {e+1}/{epoch}")
             for i, (input_img, label) in enumerate(train_data_loader):
                 # Reset previous gradients
                 self.optimizer.zero_grad()
@@ -36,7 +36,7 @@ class BaselineTrainer:
 
                 # Make forward
                 # TODO change this part to fit your loss function
-                loss = self.loss(self.model.forward(input_img), label)
+                loss = self.loss(self.model(input_img), label)
                 loss.backward()
 
                 # Adjust learning weights
@@ -47,4 +47,36 @@ class BaselineTrainer:
                 print(f"\r{i+1}/{len(train_data_loader)}: loss = {avg_loss / n_batch}", end='')
             print()
 
+            # Validation phase
+            self.model.eval()
+            ious = []
+            with torch.no_grad():
+                for input_img, label in val_data_loader:
+                    if self.use_cuda:
+                        input_img = input_img.cuda()
+                        label = label.cuda()
+
+                    outputs = self.model(input_img)
+                    _, predicted = torch.max(outputs.data, 1)
+
+                    iou = IOU(predicted, label) 
+                    ious.append(iou)
+
+            mean_iou = sum(ious) / len(ious)
+            print(f'Epoch {e+1}, Validation mean IoU: {mean_iou}')
+
         return avg_loss
+    
+def IOU(annotation, prediction):
+    ious = []
+    for i in range(3):
+        truth = annotation[i,:,:]
+        pred = prediction[i,:,:]
+        both = truth + pred
+        ones = torch.ones_like(both)
+        intersection = ones[both == 2]
+        union = ones[both > 0]
+        iou = sum(intersection) / sum(union)
+        ious.append(iou)
+
+    return sum(ious) / len(ious)  # return mean IoU

@@ -93,52 +93,37 @@ def IOU(annotation, prediction):
 
     return ious
 
-def EvaluateNetwork(net, testloader):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    torch.cuda.empty_cache()
-    net.to(device)
-    net.eval()
-    criterion = torch.nn.MSELoss()
-    #compute mean test loss and iou
-    sum_weed_iou = 0.0
-    sum_crop_iou = 0.0
-    sum_soil_iou = 0.0
+def EvaluateNetwork(model, test_loader):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
+    model.eval()
 
-    sum_loss = 0.0
-    for i, batch in enumerate(testloader):
-        print("working on image " + str(i))
-        img = batch['image'].to(device)
-        annot = batch['annotation'].to(device)
-        output = net(img)['out']
-        # compute MSE Loss
-        loss = criterion(output, annot)
+    accuracies = [0.0] * 5  # Initialize accuracies for each class
+    total = [0] * 5  # Initialize total count for each class
 
-        # construct prediction and compute per class IOU
-        output = output.squeeze() # single image assuming batch size = 1
-        classes = torch.argmax(output, dim=0)
-        r = torch.zeros_like(classes)
-        g = torch.zeros_like(classes)
-        b = torch.zeros_like(classes)
+    with torch.no_grad():
+        for batch in test_loader:
+            img, target = batch
+            img = img.to(device)
 
-        idx = classes == 0
-        r[idx] = 1
-        idx = classes == 1
-        g[idx] = 1
-        idx = classes == 2
-        b[idx] = 1
+            output = model(img)
+            preds = output.argmax(dim=1).cpu()
 
-        prediction = torch.stack([r, g, b], axis=0).float()
-        ious = IOU(prediction, annot[0])
+            for c in range(5):
+                correct_pixels = (preds == c) & (target == c)
+                total_pixels = (target == c).sum().item()
+                accuracies[c] += correct_pixels.sum().item()
+                total[c] += total_pixels
 
-        sum_loss += loss.item()
-        sum_weed_iou += ious[0]
-        sum_crop_iou += ious[1]
-        sum_soil_iou += ious[2]
+    # Calculate mean accuracy for each class
+    mean_accuracies = [accuracies[c] / total[c] if total[c] > 0 else 0 for c in range(5)]
 
-    print("loss: " + str(sum_loss / len(testloader)))
-    print("weed iou: " + str(sum_weed_iou/ len(testloader)))
-    print("crop iou: " + str(sum_crop_iou/ len(testloader)))
-    print("soil iou: " + str(sum_soil_iou/ len(testloader)))
+    # Print accuracies for each class
+    for c in range(5):
+        print(f"Class {c} accuracy: {mean_accuracies[c]}")
+
+    return mean_accuracies
+
 
 
 

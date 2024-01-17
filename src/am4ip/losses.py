@@ -35,7 +35,8 @@ class DiceLoss(_Loss):
         self.eps = eps
 
     def forward(self, inp: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        intersection = (inp * target).sum(dim=(2, 3))
-        union = inp.sum(dim=(2, 3)) + target.sum(dim=(2, 3))
+        inp = inp.argmax(dim=1)
+        intersection = (inp * target).sum(dim=(-2, -1))
+        union = inp.sum(dim=(-2, -1)) + target.sum(dim=(-2, -1))
         dice = (2. * intersection + self.eps) / (union + self.eps)
         return 1. - dice.mean()

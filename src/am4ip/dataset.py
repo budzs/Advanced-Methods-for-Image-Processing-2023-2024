@@ -113,7 +113,7 @@ class CropSegmentationDataset(Dataset):
             axs[i, 1].imshow(label, cmap=cmap, vmin=0, vmax=len(self.id2cls)-1)
             axs[i, 1].set_title('Label')
             axs[i, 2].imshow(img)
-            axs[i, 2].imshow(label, cmap=cmap, vmin=0, vmax=len(self.id2cls)-1, alpha=0.5)
+            axs[i, 2].imshow(label, cmap=cmap, vmin=0, vmax=len(self.id2cls)-1, alpha=0.7)
             axs[i, 2].set_title('Label projected onto image')
 
             # Collect unique labels from all images
