@@ -14,7 +14,8 @@ from .utils import expanded_join
 
 
 class CropSegmentationDataset(Dataset):
-    ROOT_PATH: str = "C:/Users/budai/Downloads/am4ip-lab3-master_my/am4ip-lab3-master/project-dataset"    
+    # ROOT_PATH: str = "C:/Users/budai/Downloads/am4ip-lab3-master_my/am4ip-lab3-master/project-dataset"    
+    ROOT_PATH: str = "/net/ens/am4ip/datasets/project-dataset"
     id2cls: dict = {0: "background",
                     1: "crop",
                     2: "weed",

@@ -48,9 +48,7 @@ class BaselineTrainer:
 
                 # Make forward
                 # TODO change this part to fit your loss function
-                output = self.model(input_img)
-                output_tensor = output['out']
-                loss = self.loss(output_tensor, label)
+                loss = self.loss(self.model(input_img), label)
                 loss.backward()
 
                 # Adjust learning weights
@@ -73,9 +71,7 @@ class BaselineTrainer:
                         label = label.cuda()
 
                     outputs = self.model(input_img)
-                    output_tensor = outputs['out']  # replace 'out' with the actual key
-
-                    _, predicted = torch.max(output_tensor.data, 1)
+                    _, predicted = torch.max(outputs.data, 1)
 
                     iou = IOU(predicted, label) 
                     ious.append(iou)
