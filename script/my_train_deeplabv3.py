@@ -11,11 +11,21 @@ from am4ip.losses import CombinedLoss
 from am4ip.metrics import nMAE, EvaluateNetwork
 
 from torchvision.transforms import Resize
-img_size = 128
+from torchvision.models.segmentation import deeplabv3_resnet50
+from torchvision.transforms import Normalize
+
+# ImageNet mean and standard deviation
+mean = [0.485, 0.456, 0.406]
+std = [0.229, 0.224, 0.225]
+
+img_size = 224
+
 transform = Compose([
     PILToTensor(),
+    lambda x: x.float(),  # Convert tensor to float
     Resize((img_size, img_size), antialias=True),  # Resize  
-    lambda z: z.to(dtype=torch.float32) / 127.5 - 1  # Normalize between -1 and 1
+    Normalize(mean, std),  # Normalize with ImageNet mean and std
+    lambda z: z.to(dtype=torch.float32)
 ])
 
 target_transform = Compose([
@@ -23,6 +33,8 @@ target_transform = Compose([
     Resize((img_size, img_size), antialias=True),  # Resize  
     lambda z: z.to(dtype=torch.int64).squeeze(0)
 ])
+
+# Rest of your code...
 batch_size = 32
 lr = 1e-2
 epoch = 10
@@ -51,15 +63,13 @@ loss = CombinedLoss()
 
 
 
-# Train UNet
-model = UNet(num_classes)
+# Train DeepLabV3 with ResNet50 backbone
+model = deeplabv3_resnet50(pretrained=False, num_classes=num_classes)
 optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9)
 trainer = BaselineTrainer(model=model, loss=loss, optimizer=optimizer, use_cuda=False)
 trainer.fit(train_loader,val_data_loader=val_loader, epoch=epoch)
-unet_results = EvaluateNetwork(model, val_loader)
+deeplab_results = EvaluateNetwork(model, val_loader)
 
-# Compare results
-# print("CNN Results:", cnn_results)
-print("UNet Results:", unet_results)
+print("DeepLabV3 Results:", deeplab_results)
 
 print("job's done.")

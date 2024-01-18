@@ -3,34 +3,8 @@ import torch
 # noinspection PyProtectedMember
 from torch.nn.modules.loss import _Loss
 
-
-class TVLoss(_Loss):
-    def __init__(self):
-        super(TVLoss, self).__init__()
-
-    def forward(self, inp: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError
-
-
-class AsymmetricLoss(_Loss):
-    def __init__(self):
-        super(AsymmetricLoss, self).__init__()
-
-    def forward(self, inp: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError
-
-
-class TotalLoss(_Loss):
-    def __init__(self, lambda_tv, lambda_asymm):
-        super(TotalLoss, self).__init__()
-        self.lambda_tv = lambda_tv
-        self.lambda_asymm = lambda_asymm
-
-    def forward(self, inp: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError
-
 class DiceLoss(_Loss):
-    def __init__(self, eps=1e-8):
+    def __init__(self, eps=1e-2):
         super(DiceLoss, self).__init__()
         self.eps = eps
 
@@ -41,3 +15,16 @@ class DiceLoss(_Loss):
         union = inp.sum(dim=(-2, -1)) + target.sum(dim=(-2, -1))
         dice = (2. * intersection + self.eps) / (union + self.eps)
         return 1. - dice.mean()
+    
+import torch.nn.functional as F
+
+class CombinedLoss(_Loss):
+    def __init__(self, eps=1e-5):
+        super(CombinedLoss, self).__init__()
+        self.dice_loss = DiceLoss(eps)
+
+    def forward(self, inp: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        target_one_hot = torch.nn.functional.one_hot(target, num_classes=inp.shape[1]).permute(0, 3, 1, 2).float()
+        bce_loss = F.binary_cross_entropy_with_logits(inp, target_one_hot)
+        dice_loss = self.dice_loss(inp, target)
+        return bce_loss + dice_loss
