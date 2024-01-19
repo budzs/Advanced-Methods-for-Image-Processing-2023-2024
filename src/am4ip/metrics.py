@@ -140,7 +140,7 @@ def EvaluateNetwork(model, test_loader):
         
 
     # Calculate mean IoU for each class
-    mean_ious = [ious[c] / total[c] if total[c] > 0 else 0 for c in range(5)]
+    mean_ious = [ious[c] / total[c] if total[c] > 0 else 0 for c in range(number_of_classes)]
 
     # Print IoUs for each class
     for c in range(number_of_classes):

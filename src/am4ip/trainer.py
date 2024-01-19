@@ -29,6 +29,7 @@ class BaselineTrainer:
             print("CUDA is not available")
 
     def fit(self, train_data_loader: data.DataLoader, val_data_loader: data.DataLoader, epoch: int):
+        num_classes = train_data_loader.dataset.get_class_number()
         for e in range(epoch):
             # Training phase
             self.model.train()
@@ -75,7 +76,7 @@ class BaselineTrainer:
 
                     _, predicted = torch.max(output_tensor.data, 1)
 
-                    iou = IOU(predicted, label) 
+                    iou = IOU(predicted, label, num_classes) 
                     ious.append(iou)
 
             mean_iou = sum(ious) / len(ious)
@@ -86,10 +87,9 @@ class BaselineTrainer:
 
         return avg_loss
     
-def IOU(annotation, prediction):
+def IOU(annotation, prediction,num_classes ):
     ious = []
-    print(annotation.shape)
-    for i in range(len(annotation)):
+    for i in range(num_classes):
         truth = annotation[i,:,:]
         pred = prediction[i,:,:]
         both = truth + pred

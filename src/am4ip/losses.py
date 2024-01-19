@@ -21,7 +21,11 @@ class CombinedLoss(_Loss):
     def __init__(self, eps=1e-8, weight=None):
         super(CombinedLoss, self).__init__()
         self.eps = eps
-        self.weight = torch.tensor([1.0, 1.0, 2.0, 1.0, 2.0])
+        # self.weight = torch.tensor([1.0, 1.0, 2.0, 1.0, 2.0])
+        if weight == 3:
+            self.weight = torch.tensor([1.0, 1.0, 5.0])
+        elif weight == 5:
+            self.weight = torch.tensor([1.0, 1.0, 5.0, 1.0, 5.0])
         self.dice_loss = DiceLoss(eps)
 
     def forward(self, inp: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
