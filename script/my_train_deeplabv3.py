@@ -83,6 +83,7 @@ best_score = float('-inf')
 
 # Loop over all combinations of hyperparameters
 for params in grid_list:
+    logger.info(f"Parameters: batch_size={params[0]}, epoch={params[1]}, lr={params[2]}")
     batch_size, epoch, lr = params
 
     # Create the data loaders
@@ -95,18 +96,19 @@ for params in grid_list:
     optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.8)
 
     # Train the model
-    trainer = BaselineTrainer(model=model, loss=loss, optimizer=optimizer, use_cuda=False)
+    trainer = BaselineTrainer(model=model, loss=loss, optimizer=optimizer, use_cuda=True)
     trainer.fit(train_loader, val_data_loader=val_loader, epoch=epoch)
 
     # Evaluate the model
-    deeplab_results = EvaluateNetwork(model, val_loader)
+    deeplab_results, class_wise_results = EvaluateNetwork(model, val_loader)
 
     # If the current score is better than the best score, update the best score and the best parameters
     if deeplab_results > best_score:
         best_score = deeplab_results
         best_params = params
     # Log the results
-    logger.info(f"Parameters: {params}, Score: {deeplab_results}")
+    logger.info(f"Score: {deeplab_results}")
+    logger.info(f"Class-wise results: {class_wise_results}")
 
 logger.info(f"Best parameters: {best_params}")
 logger.info(f"Best score: {best_score}")
