@@ -25,8 +25,12 @@ class CombinedLoss(_Loss):
         self.dice_loss = DiceLoss(eps)
 
     def forward(self, inp: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        # Reshape weight to match inp and target_one_hot
+        weight = self.weight.unsqueeze(0).unsqueeze(2).unsqueeze(3).expand_as(inp)
+        # Ensure the weight tensor is on the same device as inp and target_one_hot
+        weight = weight.to(inp.device)
         target_one_hot = torch.nn.functional.one_hot(target, num_classes=inp.shape[1]).permute(0, 3, 1, 2).float()  # Convert target to one-hot encoding
-        bce_loss = F.binary_cross_entropy_with_logits(inp, target_one_hot, weight=self.weight)
+        bce_loss = F.binary_cross_entropy_with_logits(inp, target_one_hot, weight=weight)
         dice_loss = self.dice_loss(inp, target)
         # Combine the two loss functions
         return dice_loss + bce_loss

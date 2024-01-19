@@ -148,4 +148,4 @@ def EvaluateNetwork(model, test_loader):
     mean_iou = sum(mean_ious) / len(mean_ious)
     print(f"Mean IoU: {mean_iou:.6f}")
 
-    return mean_iou
+    return mean_iou, mean_ious
