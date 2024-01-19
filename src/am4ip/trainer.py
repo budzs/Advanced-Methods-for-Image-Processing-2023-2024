@@ -88,7 +88,8 @@ class BaselineTrainer:
     
 def IOU(annotation, prediction):
     ious = []
-    for i in range(5):
+    print(annotation.shape)
+    for i in range(len(annotation)):
         truth = annotation[i,:,:]
         pred = prediction[i,:,:]
         both = truth + pred

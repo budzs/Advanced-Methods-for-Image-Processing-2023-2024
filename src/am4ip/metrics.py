@@ -95,6 +95,8 @@ def IOU(annotation, prediction):
     return ious
 
 def EvaluateNetwork(model, test_loader):
+    # set number of classes from dataset
+    number_of_classes = test_loader.dataset.get_class_number()
     id2cls = {0: "background",
               1: "crop",
               2: "weed",
@@ -104,8 +106,8 @@ def EvaluateNetwork(model, test_loader):
     model = model.to(device)
     model.eval()
 
-    ious = [0.0] * 5  # Initialize IoUs for each class
-    total = [0] * 5  # Initialize total count for each class
+    ious = [0.0] * number_of_classes  # Initialize IoUs for each class
+    total = [0] * number_of_classes  # Initialize total count for each class
 
     with torch.no_grad():
         for batch in test_loader:
@@ -132,7 +134,7 @@ def EvaluateNetwork(model, test_loader):
             target = target.cpu()
             iou_per_class = IOU(target, preds)
 
-            for c in range(5):
+            for c in range(number_of_classes):
                 ious[c] += iou_per_class[c]
                 total[c] += 1
         
@@ -141,7 +143,7 @@ def EvaluateNetwork(model, test_loader):
     mean_ious = [ious[c] / total[c] if total[c] > 0 else 0 for c in range(5)]
 
     # Print IoUs for each class
-    for c in range(5):
+    for c in range(number_of_classes):
         print(f"Class {id2cls[c]} IoU: {mean_ious[c]:.6f}")
 
     # Calculate and print mean IoU across all classes
