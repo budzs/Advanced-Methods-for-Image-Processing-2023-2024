@@ -119,17 +119,6 @@ def EvaluateNetwork(model, test_loader):
             output_tensor = output['out']  
             preds = output_tensor.argmax(dim=1).cpu()
 
-            # # Convert target and preds to one-hot encoding
-            # target_one_hot = torch.nn.functional.one_hot(target, num_classes=5)
-            # preds_one_hot = torch.nn.functional.one_hot(preds, num_classes=5)
-
-            # # Calculate IoU for each class
-            # iou_per_class = IOU(target_one_hot, preds_one_hot)
-
-            # for c in range(5):
-            #     ious[c] += iou_per_class[c]
-            #     total[c] += 1
-
             # Calculate IoU for each class
             target = target.cpu()
             iou_per_class = IOU(target, preds)

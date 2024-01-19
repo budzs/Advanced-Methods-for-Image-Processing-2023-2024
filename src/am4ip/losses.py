@@ -23,7 +23,7 @@ class CombinedLoss(_Loss):
         self.eps = eps
         # self.weight = torch.tensor([1.0, 1.0, 2.0, 1.0, 2.0])
         if weight == 3:
-            self.weight = torch.tensor([1.0, 1.0, 5.0])
+            self.weight = torch.tensor([0.1, 0.1, 0.8])
         elif weight == 5:
             self.weight = torch.tensor([1.0, 1.0, 5.0, 1.0, 5.0])
         self.dice_loss = DiceLoss(eps)

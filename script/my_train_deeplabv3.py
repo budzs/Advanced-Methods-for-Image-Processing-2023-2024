@@ -71,7 +71,7 @@ print("Number of classes:", num_classes)
 
 # Define the hyperparameters
 batch_sizes = [32, 64]
-epoch_sizes = [1,5, 10, 15]
+epoch_sizes = [5, 10, 15]
 learning_rates = [0.1, 0.01, 0.005]
 
 # Create a list of all combinations of hyperparameters
@@ -82,6 +82,7 @@ best_params = None
 best_score = float('-inf')
 
 # Loop over all combinations of hyperparameters
+logger.info("DiceLoss")
 for params in grid_list:
     logger.info(f"Parameters: batch_size={params[0]}, epoch={params[1]}, lr={params[2]}")
     batch_size, epoch, lr = params
@@ -92,7 +93,7 @@ for params in grid_list:
 
     # Create the model, loss function, and optimizer
     model = deeplabv3_resnet50(pretrained=False, num_classes=num_classes)
-    loss = CombinedLoss(weight=num_classes)
+    loss = DiceLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.8)
 
     # Train the model
