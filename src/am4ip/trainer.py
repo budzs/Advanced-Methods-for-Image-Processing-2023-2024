@@ -23,7 +23,7 @@ class BaselineTrainer:
         self.optimizer = optimizer
 
         if self.use_cuda:
-            self.model = self.model.to(device="cuda:1")
+            self.model = self.model.to(device="cuda:0")
             print("CUDA is available")
         else:
             print("CUDA is not available")
@@ -59,8 +59,6 @@ class BaselineTrainer:
                 n_batch += 1
 
                 print(f"{i+1}/{len(train_data_loader)}: loss = {avg_loss / n_batch}")
-                logger.info(f"{i+1}/{len(train_data_loader)}: loss = {avg_loss / n_batch}")
-            logger.info('')
             print()
 
             # Validation phase
@@ -81,6 +79,7 @@ class BaselineTrainer:
                     ious.append(iou)
 
             mean_iou = sum(ious) / len(ious)
+            logger.info(f" loss = {avg_loss / n_batch}")
             logger.info(f'Epoch {e+1}, Validation mean IoU: {mean_iou}')
 
             print(f'Epoch {e+1}, Validation mean IoU: {mean_iou}')

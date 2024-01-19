@@ -23,7 +23,7 @@ class BaselineTrainer:
         self.optimizer = optimizer
 
         if self.use_cuda:
-            self.model = self.model.to(device="cuda:1")
+            self.model = self.model.to(device="cuda:0")
             print("CUDA is available")
         else:
             print("CUDA is not available")

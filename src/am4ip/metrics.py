@@ -111,20 +111,31 @@ def EvaluateNetwork(model, test_loader):
         for batch in test_loader:
             img, target = batch
             img = img.to(device)
+            target = target.to(device)
 
             output = model(img)
-            preds = output.argmax(dim=1).cpu()
+            output_tensor = output['out']  
+            preds = output_tensor.argmax(dim=1).cpu()
 
-            # Convert target and preds to one-hot encoding
-            target_one_hot = torch.nn.functional.one_hot(target, num_classes=5)
-            preds_one_hot = torch.nn.functional.one_hot(preds, num_classes=5)
+            # # Convert target and preds to one-hot encoding
+            # target_one_hot = torch.nn.functional.one_hot(target, num_classes=5)
+            # preds_one_hot = torch.nn.functional.one_hot(preds, num_classes=5)
+
+            # # Calculate IoU for each class
+            # iou_per_class = IOU(target_one_hot, preds_one_hot)
+
+            # for c in range(5):
+            #     ious[c] += iou_per_class[c]
+            #     total[c] += 1
 
             # Calculate IoU for each class
-            iou_per_class = IOU(target_one_hot, preds_one_hot)
+            target = target.cpu()
+            iou_per_class = IOU(target, preds)
 
             for c in range(5):
                 ious[c] += iou_per_class[c]
                 total[c] += 1
+        
 
     # Calculate mean IoU for each class
     mean_ious = [ious[c] / total[c] if total[c] > 0 else 0 for c in range(5)]
@@ -137,4 +148,4 @@ def EvaluateNetwork(model, test_loader):
     mean_iou = sum(mean_ious) / len(mean_ious)
     print(f"Mean IoU: {mean_iou:.6f}")
 
-    return mean_ious, mean_iou
+    return mean_iou

@@ -57,7 +57,7 @@ print("Number of classes:", num_classes)
 
 # Define the hyperparameters
 batch_sizes = [32, 64]
-epoch_sizes = [5, 10, 15]
+epoch_sizes = [1,5, 10, 15]
 learning_rates = [0.1, 0.01, 0.005]
 
 # Create a list of all combinations of hyperparameters
@@ -69,6 +69,7 @@ best_score = float('-inf')
 
 # Loop over all combinations of hyperparameters
 for params in grid_list:
+    logger.info(f"Training with batch_size={params[0]}, epoch={params[1]}, lr={params[2]}")
     batch_size, epoch, lr = params
 
     # Create the data loaders
@@ -77,11 +78,12 @@ for params in grid_list:
 
     # Create the model, loss function, and optimizer
     model = deeplabv3_resnet50(pretrained=False, num_classes=num_classes)
-    loss = DiceLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.8)
+    loss = CombinedLoss()
+    # optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.8)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     # Train the model
-    trainer = BaselineTrainer(model=model, loss=loss, optimizer=optimizer, use_cuda=False)
+    trainer = BaselineTrainer(model=model, loss=loss, optimizer=optimizer, use_cuda=True)
     trainer.fit(train_loader, val_data_loader=val_loader, epoch=epoch)
 
     # Evaluate the model
@@ -92,7 +94,7 @@ for params in grid_list:
         best_score = deeplab_results
         best_params = params
     # Log the results
-    logger.info(f"Parameters: {params}, Score: {deeplab_results}")
+    logger.info(f"Score: {deeplab_results}")
 
 logger.info(f"Best parameters: {best_params}")
 logger.info(f"Best score: {best_score}")

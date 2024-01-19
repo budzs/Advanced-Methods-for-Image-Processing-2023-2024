@@ -6,10 +6,10 @@ from torch.utils.data import DataLoader
 sys.path.append('/net/cremi/zbudai/am4ip-lab3-master-1/src')
 
 from am4ip.dataset import CropSegmentationDataset
-from am4ip.models import SimpleNN, UNet
+from am4ip.models import UNet
 from am4ip.trainer_unet import BaselineTrainer
 from am4ip.losses import DiceLoss
-from am4ip.metrics import nMAE, EvaluateNetwork
+from am4ip.metrics import EvaluateNetwork
 
 from torchvision.transforms import Resize
 from sklearn.model_selection import ParameterGrid
@@ -65,10 +65,10 @@ print("Number of classes:", num_classes)
 
 # Define the parameter grid
 param_grid = {
-    'lr': [1e-1, 1e-2, 1e-3],
-    'epoch': [5, 10, 20],
+    'lr': [1e-1, 1e-2, 5e-2],
+    'epoch': [1, 5, 10, 20],
     'batch_size': [32, 64],
-    'img_size': [256, 512]
+    'img_size': [256, 512,1024]
 }
 
 # Create the parameter grid
@@ -80,6 +80,8 @@ for params in grid:
     epoch = params['epoch']
     batch_size = params['batch_size']
     img_size = params['img_size']
+    logger.info(f"UNet with lr={lr}, epoch={epoch}, batch_size={batch_size}, img_size={img_size}")
+
 
     # Update the transforms with the new img_size
     transform = Compose([
@@ -106,10 +108,9 @@ for params in grid:
     optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9)
 
     # Train the model with the new parameters
-    trainer = BaselineTrainer(model=model, loss=loss, optimizer=optimizer, use_cuda=False)
+    trainer = BaselineTrainer(model=model, loss=loss, optimizer=optimizer, use_cuda=True)
     trainer.fit(train_loader,val_data_loader=val_loader, epoch=epoch)
 
     # Evaluate the model
     unet_results = EvaluateNetwork(model, val_loader)
-    logger.info(f"UNet Results with lr={lr}, epoch={epoch}, batch_size={batch_size}, img_size={img_size}: {unet_results}")
     print(f"UNet Results with lr={lr}, epoch={epoch}, batch_size={batch_size}, img_size={img_size}: {unet_results}")
