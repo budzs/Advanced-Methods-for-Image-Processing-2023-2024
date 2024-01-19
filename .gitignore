@@ -17,3 +17,5 @@ solutions
 
 # Ignore all images in a specific directory
 /project-dataset/*
+
+myenv/*

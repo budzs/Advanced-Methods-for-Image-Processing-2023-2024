@@ -20,6 +20,7 @@ import torch.nn.functional as F
 class CombinedLoss(_Loss):
     def __init__(self, eps=1e-5):
         super(CombinedLoss, self).__init__()
+        self.we
         self.dice_loss = DiceLoss(eps)
 
     def forward(self, inp: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
