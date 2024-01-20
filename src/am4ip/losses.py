@@ -23,10 +23,11 @@ class CombinedLoss(_Loss):
         self.eps = eps
         # self.weight = torch.tensor([1.0, 1.0, 2.0, 1.0, 2.0])
         if weight == 3:
-            self.weight = torch.tensor([0.1, 0.2,0.7])
+            self.weight = torch.tensor([0.1, 0.2, 0.7])
         elif weight == 5:
             self.weight = torch.tensor([1.0, 1.0, 5.0, 1.0, 5.0])
         self.dice_loss = DiceLoss(eps)
+        print("Weight", self.weight)
 
     def forward(self, inp: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         # Reshape weight to match inp and target_one_hot
@@ -37,4 +38,5 @@ class CombinedLoss(_Loss):
         bce_loss = F.binary_cross_entropy_with_logits(inp, target_one_hot, weight=weight)
         dice_loss = self.dice_loss(inp, target)
         # Combine the two loss functions
-        return dice_loss + bce_loss
+        return 0.1*dice_loss + 0.9*bce_loss
+        # return bce_loss

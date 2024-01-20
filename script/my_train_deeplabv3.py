@@ -16,7 +16,7 @@ from torchvision.transforms import Resize
 from torchvision.models.segmentation import deeplabv3_resnet50
 from torchvision.transforms import Normalize
 from torchvision import models
-import segmentation_models_pytorch as smp
+# import segmentation_models_pytorch as smp
 from torch import nn
 import logging
 import datetime
