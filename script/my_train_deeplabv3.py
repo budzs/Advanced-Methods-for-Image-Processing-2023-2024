@@ -13,7 +13,7 @@ from am4ip.losses import CombinedLoss, DiceLoss
 from am4ip.metrics import EvaluateNetwork
 
 from torchvision.transforms import Resize
-from torchvision.models.segmentation import deeplabv3_resnet50
+# from torchvision.models.segmentation import deeplabv3_resnet50
 from torchvision.transforms import Normalize
 from torchvision import models 
 # import segmentation_models_pytorch as smp
@@ -79,9 +79,9 @@ print("Number of classes:", num_classes)
 class_counts = [61674600, 8563795, 359237]
 
 # Define the hyperparameters
-batch_sizes = [16, 32]
-epoch_sizes = [1, 5, 10, 15]
-learning_rates = [0.1, 0.01, 0.005]
+batch_sizes = [16,32]
+epoch_sizes = [1, 10, 15, 20]
+learning_rates = [0.001, 0.0001, 0.01]
 
 # Create a list of all combinations of hyperparameters
 grid_list = list(itertools.product(batch_sizes, epoch_sizes, learning_rates))
@@ -91,7 +91,7 @@ best_params = None
 best_score = float('-inf')
 
 # Loop over all combinations of hyperparameters
-logger.info("Pretraind model fcnresnet50")
+logger.info("Pretraind model fcnresnet50, weights from class_counts, Dice")
 for params in grid_list:
     logger.info(f"Parameters: batch_size={params[0]}, epoch={params[1]}, lr={params[2]}")
     batch_size, epoch, lr = params
@@ -101,8 +101,9 @@ for params in grid_list:
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     # Create the model, loss function, and optimizer
-    # model = deeplabv3_resnet50(pretrained=True )
-    # model.classifier[4] = torch.nn.Conv2d(256, num_classes, kernel_size=(1, 1), stride=(1, 1))
+    # deeplabv3_model = deeplabv3_resnet50(pretrained=True, progress=True)
+    # deeplabv3_model.classifier[4] = torch.nn.Conv2d(256, num_classes, kernel_size=(1, 1), stride=(1, 1))
+    # deeplabv3_model.aux_classifier[4] = torch.nn.Conv2d(256, num_classes, kernel_size=(1, 1), stride=(1, 1))
     fcnresnet50 = models.segmentation.fcn_resnet50(pretrained=True, progress=True)
     # change classifier to predict only 3 classes
     fcnresnet50.classifier[4] = nn.Conv2d(512, num_classes, kernel_size=(1, 1), stride=(1, 1))

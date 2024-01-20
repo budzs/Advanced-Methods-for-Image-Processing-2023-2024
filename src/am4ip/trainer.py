@@ -87,17 +87,17 @@ class BaselineTrainer:
 
         return avg_loss
     
-def IOU(annotation, prediction,num_classes ):
+def IOU(annotation, prediction, num_classes):
     ious = []
     for i in range(num_classes):
-        truth = annotation[i,:,:]
-        pred = prediction[i,:,:]
-        both = truth + pred
-        ones = torch.ones_like(both)
-        intersection = ones[both == 2]
-        union = ones[both > 0]
+        truth = (annotation == i)
+        pred = (prediction == i)
+        intersection = torch.sum(torch.logical_and(truth, pred))
+        union = torch.sum(torch.logical_or(truth, pred))
         epsilon = 1e-7  # Small constant to avoid division by zero
-        iou = sum(intersection) / (sum(union) + epsilon)
+        iou = intersection.float() / (union.float() + epsilon)
         ious.append(iou)
+
+    return sum(ious) / len(ious)  # return mean IoU
 
     return sum(ious) / len(ious)  # return mean IoU
