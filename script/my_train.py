@@ -80,7 +80,7 @@ for params in grid:
     train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
-    # Update the optimizer with the new lr
+    # Unet
     model = UNet(num_classes)
     loss = CombinedLoss(weight=num_classes)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)

@@ -15,7 +15,9 @@ from am4ip.metrics import EvaluateNetwork
 from torchvision.transforms import Resize
 from torchvision.models.segmentation import deeplabv3_resnet50
 from torchvision.transforms import Normalize
-
+from torchvision import models
+import segmentation_models_pytorch as smp
+from torch import nn
 import logging
 import datetime
 
@@ -70,8 +72,8 @@ num_classes = dataset.get_class_number()
 print("Number of classes:", num_classes)
 
 # Define the hyperparameters
-batch_sizes = [32, 64]
-epoch_sizes = [5, 10, 15]
+batch_sizes = [16, 32]
+epoch_sizes = [1, 5, 10, 15]
 learning_rates = [0.1, 0.01, 0.005]
 
 # Create a list of all combinations of hyperparameters
@@ -82,7 +84,7 @@ best_params = None
 best_score = float('-inf')
 
 # Loop over all combinations of hyperparameters
-logger.info("Pretraind model")
+logger.info("Pretraind model fcnresnet50")
 for params in grid_list:
     logger.info(f"Parameters: batch_size={params[0]}, epoch={params[1]}, lr={params[2]}")
     batch_size, epoch, lr = params
@@ -92,17 +94,22 @@ for params in grid_list:
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     # Create the model, loss function, and optimizer
-    model = deeplabv3_resnet50(pretrained=True )
-    model.classifier[4] = torch.nn.Conv2d(256, num_classes, kernel_size=(1, 1), stride=(1, 1))
+    # model = deeplabv3_resnet50(pretrained=True )
+    # model.classifier[4] = torch.nn.Conv2d(256, num_classes, kernel_size=(1, 1), stride=(1, 1))
+    fcnresnet50 = models.segmentation.fcn_resnet50(pretrained=True, progress=True)
+    # change classifier to predict only 3 classes
+    fcnresnet50.classifier[4] = nn.Conv2d(512, num_classes, kernel_size=(1, 1), stride=(1, 1))
+    fcnresnet50.aux_classifier[4] = nn.Conv2d(256, num_classes, kernel_size=(1, 1), stride=(1, 1))
+    # unet = smp.Unet('resnet50', encoder_weights='imagenet', classes=3, in_channels=3)
     loss = CombinedLoss(weight=num_classes)
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.8)
+    optimizer = torch.optim.SGD(fcnresnet50.parameters(), lr=lr, momentum=0.8)
 
     # Train the model
-    trainer = BaselineTrainer(model=model, loss=loss, optimizer=optimizer, use_cuda=True)
+    trainer = BaselineTrainer(model=fcnresnet50, loss=loss, optimizer=optimizer, use_cuda=True)
     trainer.fit(train_loader, val_data_loader=val_loader, epoch=epoch)
 
     # Evaluate the model
-    deeplab_results, class_wise_results = EvaluateNetwork(model, val_loader)
+    deeplab_results, class_wise_results = EvaluateNetwork(fcnresnet50, val_loader)
 
     # If the current score is better than the best score, update the best score and the best parameters
     if deeplab_results > best_score:
