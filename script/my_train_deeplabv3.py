@@ -7,10 +7,10 @@ sys.path.append('/net/cremi/zbudai/am4ip-lab3-master-1/src')
 import itertools
 
 from am4ip.dataset import CropSegmentationDataset
-from am4ip.models import SimpleNN, UNet
+from am4ip.models import UNet
 from am4ip.trainer import BaselineTrainer
 from am4ip.losses import CombinedLoss, DiceLoss
-from am4ip.metrics import nMAE, EvaluateNetwork
+from am4ip.metrics import EvaluateNetwork
 
 from torchvision.transforms import Resize
 from torchvision.models.segmentation import deeplabv3_resnet50
@@ -82,7 +82,7 @@ best_params = None
 best_score = float('-inf')
 
 # Loop over all combinations of hyperparameters
-logger.info("DiceLoss")
+logger.info("Pretraind model")
 for params in grid_list:
     logger.info(f"Parameters: batch_size={params[0]}, epoch={params[1]}, lr={params[2]}")
     batch_size, epoch, lr = params
@@ -92,8 +92,9 @@ for params in grid_list:
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     # Create the model, loss function, and optimizer
-    model = deeplabv3_resnet50(pretrained=False, num_classes=num_classes)
-    loss = DiceLoss()
+    model = deeplabv3_resnet50(pretrained=True )
+    model.classifier[4] = torch.nn.Conv2d(256, num_classes, kernel_size=(1, 1), stride=(1, 1))
+    loss = CombinedLoss(weight=num_classes)
     optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.8)
 
     # Train the model

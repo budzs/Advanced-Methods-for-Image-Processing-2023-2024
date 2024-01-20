@@ -29,8 +29,8 @@ logger = logging.getLogger()
 param_grid = {
     'lr': [1e-3, 1e-4, 5e-4],
     'epoch': [1, 5, 10, 20],
-    'batch_size': [32, 64],
-    'img_size': [256, 512,1024]
+    'batch_size': [8],
+    'img_size': [560]
 }
 
 # Create the parameter grid
