@@ -15,7 +15,7 @@ from am4ip.metrics import EvaluateNetwork
 from torchvision.transforms import Resize
 from torchvision.models.segmentation import deeplabv3_resnet50
 from torchvision.transforms import Normalize
-from torchvision import models
+from torchvision import models 
 # import segmentation_models_pytorch as smp
 from torch import nn
 import logging
@@ -70,6 +70,13 @@ val_dataset = CropSegmentationDataset(set_type="val", transform=val_transform, t
 # dataset.visualize_data()
 num_classes = dataset.get_class_number()
 print("Number of classes:", num_classes)
+# Calculate class counts
+# class_counts = [0] * dataset.get_class_number()
+# for _, target in dataset:
+#     for class_index in range(dataset.get_class_number()):
+#         class_counts[class_index] += (target == class_index).sum().item()
+# print("Class counts:", class_counts) 
+class_counts = [61674600, 8563795, 359237]
 
 # Define the hyperparameters
 batch_sizes = [16, 32]
@@ -101,7 +108,7 @@ for params in grid_list:
     fcnresnet50.classifier[4] = nn.Conv2d(512, num_classes, kernel_size=(1, 1), stride=(1, 1))
     fcnresnet50.aux_classifier[4] = nn.Conv2d(256, num_classes, kernel_size=(1, 1), stride=(1, 1))
     # unet = smp.Unet('resnet50', encoder_weights='imagenet', classes=3, in_channels=3)
-    loss = CombinedLoss(weight=num_classes)
+    loss = CombinedLoss(class_counts=class_counts)
     optimizer = torch.optim.SGD(fcnresnet50.parameters(), lr=lr, momentum=0.8)
 
     # Train the model

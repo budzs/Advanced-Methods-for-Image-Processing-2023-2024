@@ -18,14 +18,11 @@ class DiceLoss(_Loss):
     
 
 class CombinedLoss(_Loss):
-    def __init__(self, eps=1e-8, weight=None):
+    def __init__(self, class_counts, eps=1e-8):
         super(CombinedLoss, self).__init__()
         self.eps = eps
-        # self.weight = torch.tensor([1.0, 1.0, 2.0, 1.0, 2.0])
-        if weight == 3:
-            self.weight = torch.tensor([0.1, 0.2, 0.7])
-        elif weight == 5:
-            self.weight = torch.tensor([1.0, 1.0, 5.0, 1.0, 5.0])
+        total_count = sum(class_counts)
+        self.weight = torch.tensor([total_count / count for count in class_counts])
         self.dice_loss = DiceLoss(eps)
         print("Weight", self.weight)
 
@@ -39,4 +36,3 @@ class CombinedLoss(_Loss):
         dice_loss = self.dice_loss(inp, target)
         # Combine the two loss functions
         return 0.1*dice_loss + 0.9*bce_loss
-        # return bce_loss
