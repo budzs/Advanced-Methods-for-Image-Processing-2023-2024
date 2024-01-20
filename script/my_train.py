@@ -9,7 +9,7 @@ from am4ip.dataset import CropSegmentationDataset
 from am4ip.models import UNet
 from am4ip.trainer_unet import BaselineTrainer
 from am4ip.losses import DiceLoss, CombinedLoss
-from am4ip.metrics import EvaluateNetwork
+from am4ip.metrics_unet import EvaluateNetwork
 
 from torchvision.transforms import Resize
 from sklearn.model_selection import ParameterGrid
@@ -27,7 +27,7 @@ logger = logging.getLogger()
 
 # Define the parameter grid
 param_grid = {
-    'lr': [1e-1, 1e-2, 5e-2],
+    'lr': [1e-3, 1e-4, 5e-4],
     'epoch': [1, 5, 10, 20],
     'batch_size': [32, 64],
     'img_size': [256, 512,1024]
@@ -82,7 +82,7 @@ for params in grid:
 
     # Update the optimizer with the new lr
     model = UNet(num_classes)
-    loss = CombinedLoss()
+    loss = CombinedLoss(weight=num_classes)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     # Train the model with the new parameters
