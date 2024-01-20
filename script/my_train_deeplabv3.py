@@ -39,7 +39,7 @@ transform = Compose([
     PILToTensor(),
     lambda x: x.float(),  # Convert tensor to float
     Resize((img_size, img_size), antialias=True),  # Resize  
-    Normalize(mean, std),  # Normalize with ImageNet mean and std
+    # Normalize(mean, std),  # Normalize with ImageNet mean and std
     lambda z: z.to(dtype=torch.float32)
 ])
 
@@ -53,7 +53,7 @@ val_transform = Compose([
     PILToTensor(),
     lambda x: x.float(),  # Convert tensor to float
     Resize((img_size, img_size), antialias=True),  # Resize
-    Normalize(mean, std),  # Normalize with ImageNet mean and std
+    # Normalize(mean, std),  # Normalize with ImageNet mean and std
     lambda z: z.to(dtype=torch.float32)
 ])
 

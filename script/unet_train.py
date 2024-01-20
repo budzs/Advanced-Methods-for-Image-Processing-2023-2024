@@ -2,15 +2,15 @@ import sys
 import torch
 from torchvision.transforms import Compose, PILToTensor
 from torch.utils.data import DataLoader
-sys.path.append('C:/Users/budai/Downloads/am4ip-lab3-master_my/am4ip-lab3-master/src')
-# sys.path.append('/net/cremi/zbudai/am4ip-lab3-master-1/src')
+# sys.path.append('C:/Users/budai/Downloads/am4ip-lab3-master_my/am4ip-lab3-master/src')
+sys.path.append('/net/cremi/zbudai/am4ip-lab3-master-1/src')
 import itertools
 
 from am4ip.dataset import CropSegmentationDataset
 from am4ip.models import UNet
-from am4ip.trainer import BaselineTrainer
+from am4ip.trainer_unet import BaselineTrainer
 from am4ip.losses import CombinedLoss, DiceLoss
-from am4ip.metrics import EvaluateNetwork
+from am4ip.metrics_unet import EvaluateNetwork
 
 from torchvision.transforms import Resize
 # from torchvision.models.segmentation import deeplabv3_resnet50
@@ -33,7 +33,7 @@ logger = logging.getLogger()
 mean = [0.485, 0.456, 0.406]
 std = [0.229, 0.224, 0.225]
 
-img_size = 224
+img_size = 256
 
 transform = Compose([
     PILToTensor(),
@@ -63,7 +63,6 @@ val_target_transform = Compose([
     lambda z: z.to(dtype=torch.int64).squeeze(0)
 ])
 
-input_size = img_size*img_size*3
 
 dataset = CropSegmentationDataset(transform=transform, target_transform=target_transform, merge_small_items=True)
 val_dataset = CropSegmentationDataset(set_type="val", transform=val_transform, target_transform=val_target_transform, merge_small_items=True)
@@ -91,7 +90,7 @@ best_params = None
 best_score = float('-inf')
 
 # Loop over all combinations of hyperparameters
-logger.info("Pretraind model fcnresnet50, weights from class_counts, Dice")
+logger.info("UNET")
 for params in grid_list:
     logger.info(f"Parameters: batch_size={params[0]}, epoch={params[1]}, lr={params[2]}")
     batch_size, epoch, lr = params
@@ -107,7 +106,7 @@ for params in grid_list:
     optimizer = torch.optim.SGD(unet.parameters(), lr=lr, momentum=0.8)
 
     # Train the model
-    trainer = BaselineTrainer(model=unet, loss=loss, optimizer=optimizer, use_cuda=False)  # Use the U-Net model
+    trainer = BaselineTrainer(model=unet, loss=loss, optimizer=optimizer, use_cuda=True)  # Use the U-Net model
     trainer.fit(train_loader, val_data_loader=val_loader, epoch=epoch)
 
     # Evaluate the model
