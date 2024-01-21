@@ -82,9 +82,9 @@ class MSE(NoReferenceIQMetric):
 nMAE = NormalizedMeanAbsoluteError
 
 
-def IOU(annotation, prediction):
+def IOU(annotation, prediction, num_classes=5):
     ious = []
-    for i in range(5):
+    for i in range(num_classes):
         truth = (annotation == i)
         pred = (prediction == i)
         intersection = torch.logical_and(truth, pred)
@@ -95,8 +95,7 @@ def IOU(annotation, prediction):
     return ious
 
 def EvaluateNetwork(model, test_loader):
-    # set number of classes from dataset
-    number_of_classes = test_loader.dataset.get_class_number()
+    num_classes = test_loader.dataset.get_class_number()
     id2cls = {0: "background",
               1: "crop",
               2: "weed",
@@ -106,33 +105,30 @@ def EvaluateNetwork(model, test_loader):
     model = model.to(device)
     model.eval()
 
-    ious = [0.0] * number_of_classes  # Initialize IoUs for each class
-    total = [0] * number_of_classes  # Initialize total count for each class
+    ious = [0.0] * num_classes  # Initialize IoUs for each class
+    total = [0] * num_classes  # Initialize total count for each class
 
     with torch.no_grad():
         for batch in test_loader:
             img, target = batch
             img = img.to(device)
-            target = target.to(device)
 
             output = model(img)
-            output_tensor = output['out']  
-            preds = output_tensor.argmax(dim=1).cpu()
+            preds = output.argmax(dim=1).cpu()
 
-            # Calculate IoU for each class
             target = target.cpu()
-            iou_per_class = IOU(target, preds)
+            # Calculate IoU for each class
+            iou_per_class = IOU(target, preds, num_classes=num_classes)
 
-            for c in range(number_of_classes):
+            for c in range(num_classes):
                 ious[c] += iou_per_class[c]
                 total[c] += 1
-        
 
     # Calculate mean IoU for each class
-    mean_ious = [ious[c] / total[c] if total[c] > 0 else 0 for c in range(number_of_classes)]
-
+    mean_ious = [ious[c] / total[c] if total[c] > 0 else 0 for c in range(num_classes
+                                                                          )]
     # Print IoUs for each class
-    for c in range(number_of_classes):
+    for c in range(num_classes):
         print(f"Class {id2cls[c]} IoU: {mean_ious[c]:.6f}")
 
     # Calculate and print mean IoU across all classes

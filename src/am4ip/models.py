@@ -1,70 +1,80 @@
 import torch
-from torch import nn
+import torch.nn.functional as F
+import torch.nn as nn
+from collections import OrderedDict
 
-class ConvBlock(nn.Module):
-    def __init__(self, in_channels, out_channels):
-        super(ConvBlock, self).__init__()
+class Block(nn.Module):
+    def __init__(self, ch_in, ch_out, bn):
+        super().__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+            nn.Conv2d(ch_in, ch_out, 3, padding="same"),
+            nn.BatchNorm2d(ch_out) if bn else nn.Identity(),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True)
         )
 
     def forward(self, x):
         return self.conv(x)
 
+
+class DownSample(nn.Module):
+    def __init__(self, ch_in, ch_out, bn):
+        super().__init__()
+        self.block = nn.Sequential(
+            Block(ch_in, ch_out, bn),
+            Block(ch_out, ch_out, bn))
+        self.down_sample = nn.MaxPool2d(2)
+
+    def forward(self, x):
+        skip_out = self.block(x)
+        down_out = self.down_sample(skip_out)
+        return down_out, skip_out
+
+
+class UpSample(nn.Module):
+    def __init__(self, ch_in, ch_out, bn, bilinear):
+        super().__init__()
+        self.up_sample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True) if bilinear else nn.ConvTranspose2d(ch_in-ch_out, ch_in-ch_out, kernel_size=2, stride=2)
+        self.block = nn.Sequential(
+            Block(ch_in, ch_out, bn),
+            Block(ch_out, ch_out, bn))
+
+    def forward(self, down_input, skip_input):
+        x = self.up_sample(down_input)
+        x = torch.cat([x, skip_input], dim=1)
+        return self.block(x)
+
+
 class UNet(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self,in_channel,  n_classes, batchnorm=False,  bilinear=False):
         super(UNet, self).__init__()
-        self.encoder = nn.Sequential(
-            ConvBlock(3, 64),
-            nn.MaxPool2d(2, 2),
-            ConvBlock(64, 128),
-            nn.MaxPool2d(2, 2),
-            ConvBlock(128, 256),
-            nn.MaxPool2d(2, 2),
-            ConvBlock(256, 512),
-            nn.MaxPool2d(2, 2),
-        )
+
+        self.down_conv1 = DownSample(in_channel, 64, batchnorm)
+        self.down_conv2 = DownSample(64, 128, batchnorm)
+        self.down_conv3 = DownSample(128, 256, batchnorm)
+        self.down_conv4 = DownSample(256, 512, batchnorm)
+
+        # Bottleneck
+        self.double_conv = nn.Sequential(
+                Block(512, 1024, batchnorm),
+                Block(1024, 1024, batchnorm))
         
-        self.center = ConvBlock(512, 1024)
+        self.up_conv4 = UpSample(512 + 1024, 512, batchnorm, bilinear)
+        self.up_conv3 = UpSample(256 + 512, 256, batchnorm, bilinear)
+        self.up_conv2 = UpSample(128 + 256, 128, batchnorm, bilinear)
+        self.up_conv1 = UpSample(128 + 64, 64, batchnorm, bilinear)
         
-        self.decoder = nn.Sequential(
-            ConvBlock(1024, 512),
-            nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2),
-            ConvBlock(256, 256),
-            nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2),
-            ConvBlock(128, 128),
-            nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2),
-            ConvBlock(64, 64),
-            nn.ConvTranspose2d(64, 32, kernel_size=2, stride=2),
-            ConvBlock(32, 32),
-        )
-        
-        self.final = nn.Conv2d(32, num_classes, kernel_size=1)
+        self.out = nn.Conv2d(64, n_classes, kernel_size=1)
 
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.center(x)
-        x = self.decoder(x)
-        out = self.final(x)
-        return out
+        x, skip1_out = self.down_conv1(x)
+        x, skip2_out = self.down_conv2(x)
+        x, skip3_out = self.down_conv3(x)
+        x, skip4_out = self.down_conv4(x)
+        x = self.double_conv(x)
+        x = self.up_conv4(x, skip4_out)
+        x = self.up_conv3(x, skip3_out)
+        x = self.up_conv2(x, skip2_out)
+        x = self.up_conv1(x, skip1_out)
+        x = self.out(x)
+        return x
     
-
-class SimpleNN(nn.Module):
-    def __init__(self, input_size, hidden_size, num_classes):
-        super(SimpleNN, self).__init__()
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(hidden_size, hidden_size)
-        self.fc3 = nn.Linear(hidden_size, num_classes)
-
-    def forward(self, x):
-        x = x.view(x.size(0), -1)  # Flatten the input tensor
-        out = self.fc1(x)
-        out = self.relu(out)
-        out = self.fc2(out)
-        out = self.relu(out)
-        out = self.fc3(out)
-        return out

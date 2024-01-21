@@ -23,12 +23,13 @@ class BaselineTrainer:
         self.optimizer = optimizer
 
         if self.use_cuda:
-            self.model = self.model.to(device="cuda:1")
+            self.model = self.model.to(device="cuda:0")
             print("CUDA is available")
         else:
             print("CUDA is not available")
 
     def fit(self, train_data_loader: data.DataLoader, val_data_loader: data.DataLoader, epoch: int):
+        num_classes = train_data_loader.dataset.get_class_number()
         for e in range(epoch):
             # Training phase
             self.model.train()
@@ -59,8 +60,6 @@ class BaselineTrainer:
                 n_batch += 1
 
                 print(f"{i+1}/{len(train_data_loader)}: loss = {avg_loss / n_batch}")
-                logger.info(f"{i+1}/{len(train_data_loader)}: loss = {avg_loss / n_batch}")
-            logger.info('')
             print()
 
             # Validation phase
@@ -77,27 +76,28 @@ class BaselineTrainer:
 
                     _, predicted = torch.max(output_tensor.data, 1)
 
-                    iou = IOU(predicted, label) 
+                    iou = IOU(predicted, label, num_classes) 
                     ious.append(iou)
 
             mean_iou = sum(ious) / len(ious)
+            logger.info(f" loss = {avg_loss / n_batch}")
             logger.info(f'Epoch {e+1}, Validation mean IoU: {mean_iou}')
 
             print(f'Epoch {e+1}, Validation mean IoU: {mean_iou}')
 
         return avg_loss
     
-def IOU(annotation, prediction):
+def IOU(annotation, prediction, num_classes):
     ious = []
-    for i in range(5):
-        truth = annotation[i,:,:]
-        pred = prediction[i,:,:]
-        both = truth + pred
-        ones = torch.ones_like(both)
-        intersection = ones[both == 2]
-        union = ones[both > 0]
+    for i in range(num_classes):
+        truth = (annotation == i)
+        pred = (prediction == i)
+        intersection = torch.sum(torch.logical_and(truth, pred))
+        union = torch.sum(torch.logical_or(truth, pred))
         epsilon = 1e-7  # Small constant to avoid division by zero
-        iou = sum(intersection) / (sum(union) + epsilon)
+        iou = intersection.float() / (union.float() + epsilon)
         ious.append(iou)
+
+    return sum(ious) / len(ious)  # return mean IoU
 
     return sum(ious) / len(ious)  # return mean IoU

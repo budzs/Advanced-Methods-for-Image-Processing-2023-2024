@@ -1,4 +1,4 @@
-torch
+torc
 numpy~=1.26.3
 Pillow~=9.1.1
 torchvision
