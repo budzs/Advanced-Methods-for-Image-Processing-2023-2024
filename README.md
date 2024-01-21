@@ -1,9 +1,6 @@
 # Crop and Weed Segmentation Project 🌱🌾
 
 [![Python Version](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-blue)](https://www.python.org/downloads/release)
-[![GitHub Issues](https://img.shields.io/github/issues/yourusername/crop-weed-segmentation)](https://github.com/yourusername/crop-weed-segmentation/issues)
-[![GitHub Forks](https://img.shields.io/github/forks/yourusername/crop-weed-segmentation)](https://github.com/yourusername/crop-weed-segmentation/network/members)
-[![GitHub Stars](https://img.shields.io/github/stars/yourusername/crop-weed-segmentation)](https://github.com/yourusername/crop-weed-segmentation/stargazers)
 
 ## Context 🌍
 # Context
