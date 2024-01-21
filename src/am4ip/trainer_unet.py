@@ -30,6 +30,7 @@ class BaselineTrainer:
 
     def fit(self, train_data_loader: data.DataLoader, val_data_loader: data.DataLoader, epoch: int):
         for e in range(epoch):
+            num_classes = train_data_loader.dataset.get_class_number()
             # Training phase
             self.model.train()
             avg_loss = 0.
@@ -57,8 +58,8 @@ class BaselineTrainer:
                 n_batch += 1
 
                 print(f"{i+1}/{len(train_data_loader)}: loss = {avg_loss / n_batch}")
-                logger.info(f"{i+1}/{len(train_data_loader)}: loss = {avg_loss / n_batch}")
-            logger.info('')
+                # logger.info(f"{i+1}/{len(train_data_loader)}: loss = {avg_loss / n_batch}")
+            # logger.info('')
             print()
 
             # Validation phase
@@ -73,27 +74,26 @@ class BaselineTrainer:
                     outputs = self.model(input_img)
                     _, predicted = torch.max(outputs.data, 1)
 
-                    iou = IOU(predicted, label) 
+                    iou = IOU(predicted, label, num_classes) 
                     ious.append(iou)
 
             mean_iou = sum(ious) / len(ious)
+            logger.info(f'Loss: {avg_loss / n_batch}')
             logger.info(f'Epoch {e+1}, Validation mean IoU: {mean_iou}')
 
             print(f'Epoch {e+1}, Validation mean IoU: {mean_iou}')
 
         return avg_loss
     
-def IOU(annotation, prediction):
+def IOU(annotation, prediction, num_classes):
     ious = []
-    for i in range(5):
-        truth = annotation[i,:,:]
-        pred = prediction[i,:,:]
-        both = truth + pred
-        ones = torch.ones_like(both)
-        intersection = ones[both == 2]
-        union = ones[both > 0]
+    for i in range(num_classes):
+        truth = (annotation == i)
+        pred = (prediction == i)
+        both = truth & pred
+        union = truth | pred
         epsilon = 1e-7  # Small constant to avoid division by zero
-        iou = sum(intersection) / (sum(union) + epsilon)
+        iou = both.float().sum() / (union.float().sum() + epsilon)
         ious.append(iou)
 
     return sum(ious) / len(ious)  # return mean IoU

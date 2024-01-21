@@ -82,9 +82,9 @@ class MSE(NoReferenceIQMetric):
 nMAE = NormalizedMeanAbsoluteError
 
 
-def IOU(annotation, prediction):
+def IOU(annotation, prediction, num_classes=5):
     ious = []
-    for i in range(5):
+    for i in range(num_classes):
         truth = (annotation == i)
         pred = (prediction == i)
         intersection = torch.logical_and(truth, pred)
@@ -118,7 +118,7 @@ def EvaluateNetwork(model, test_loader):
 
             target = target.cpu()
             # Calculate IoU for each class
-            iou_per_class = IOU(target, preds)
+            iou_per_class = IOU(target, preds, num_classes=num_classes)
 
             for c in range(num_classes):
                 ious[c] += iou_per_class[c]
