@@ -1,4 +1,12 @@
-## Crop and Weed Segmentation Project
+# Crop and Weed Segmentation Project 🌱🌾
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-blue)](https://www.python.org/downloads/release)
+[![GitHub Issues](https://img.shields.io/github/issues/yourusername/crop-weed-segmentation)](https://github.com/yourusername/crop-weed-segmentation/issues)
+[![GitHub Forks](https://img.shields.io/github/forks/yourusername/crop-weed-segmentation)](https://github.com/yourusername/crop-weed-segmentation/network/members)
+[![GitHub Stars](https://img.shields.io/github/stars/yourusername/crop-weed-segmentation)](https://github.com/yourusername/crop-weed-segmentation/stargazers)
+
+## Context 🌍
 # Context
 This project involves the segmentation of crops and weeds from images taken by a drone over crop fields. The task is to segment each pixel into either the background, a crop, or a weed. A dataset is provided, composed of a set of training images and masks (around 1400 images), a validation set of images and masks (around 450), and a testing set of images only (around 350 images). Additionally, a class to load the data is provided.
 
