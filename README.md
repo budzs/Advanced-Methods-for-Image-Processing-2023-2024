@@ -53,11 +53,41 @@ To use the pre-trained weights for image classification, follow these steps:
 Now, you can load the pre-trained weights (`model.pth`) and use them for image classification. Include code snippets or instructions for running the code.
 
 ```python
-# Example code to load and use the pre-trained weights
 import torch
+from torchvision.transforms import Compose, PILToTensor, Resize
+from torch.utils.data import DataLoader
+from am4ip.dataset import CropSegmentationDataset
+from am4ip.models import UNet
+from am4ip.metrics_unet import EvaluateNetwork
 
-model = YourModel()  # Replace with your model class
-model.load_state_dict(torch.load('path/to/model.pth'))
-model.eval()
+img_size = 256
 
-# Perform image classification using the loaded weights
+transform = Compose([
+    PILToTensor(),
+    lambda x: x.float(),  # Convert tensor to float
+    Resize((img_size, img_size), antialias=True),  # Resize  
+    lambda z: z.to(dtype=torch.float32)
+])
+
+target_transform = Compose([
+    PILToTensor(),
+    Resize((img_size, img_size), antialias=True),  # Resize  
+    lambda z: z.to(dtype=torch.int64).squeeze(0)
+])
+
+# Load the test dataset
+test_dataset = CropSegmentationDataset(set_type="test", transform=transform, target_transform=target_transform, merge_small_items=True)
+test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+
+# Load the best model
+num_classes = test_dataset.get_class_number()
+best_model = UNet(in_channel=3, n_classes=num_classes)
+best_model.load_state_dict(torch.load('model.pth'))
+best_model.eval()
+
+# Evaluate the model on the test set
+unet_results, class_wise_results = EvaluateNetwork(best_model, test_loader)
+
+print(f"Score: {unet_results}\n  Class-wise results:")
+for i, result in enumerate(class_wise_results):
+    print(f"Class {i}: {result}")
