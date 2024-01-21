@@ -26,7 +26,7 @@ List any prerequisites or requirements for running the code.
 
 To use the pre-trained weights for image classification, follow these steps:
 
-1. Download the weights from [https://jm-pt.eu/wp-content/uploads/2024/01/weights.zip](https://jm-pt.eu/wp-content/uploads/2024/01/weights.zip).
+1. Download the weights from [this link](https://drive.google.com/drive/folders/181eg_U2ldNvJEY8FR97I3OfndaJ6zDkh?usp=sharing).
 
     ```bash
     wget https://jm-pt.eu/wp-content/uploads/2024/01/weights.zip
