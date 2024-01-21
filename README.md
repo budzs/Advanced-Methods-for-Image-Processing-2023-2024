@@ -16,10 +16,44 @@ In terms of models, I have tried UNet, DeepLabv3, and FCN-ResNet50. UNet is a po
 
 Through these experiments, I aim to find the best combination of loss function and model for this specific task.
 
-#Getting started
-<h3 align=”center”>
+## Getting Started
 
-Download the <a href=”https://jm-pt.eu/wp-content/uploads/2024/01/weights.zip" target=”_blank” rel=”noreferrer”>Weights</a> 👋
+### Prerequisites
 
-</h3>
+List any prerequisites or requirements for running the code.
 
+### Downloading Weights
+
+To use the pre-trained weights for image classification, follow these steps:
+
+1. Download the weights from [https://jm-pt.eu/wp-content/uploads/2024/01/weights.zip](https://jm-pt.eu/wp-content/uploads/2024/01/weights.zip).
+
+    ```bash
+    wget https://jm-pt.eu/wp-content/uploads/2024/01/weights.zip
+    ```
+
+    or
+
+    ```bash
+    curl -O https://jm-pt.eu/wp-content/uploads/2024/01/weights.zip
+    ```
+
+2. Unzip the downloaded file.
+
+    ```bash
+    unzip weights.zip
+    ```
+
+### Running the Code
+
+Now, you can load the pre-trained weights (`model.pth`) and use them for image classification. Include code snippets or instructions for running the code.
+
+```python
+# Example code to load and use the pre-trained weights
+import torch
+
+model = YourModel()  # Replace with your model class
+model.load_state_dict(torch.load('path/to/model.pth'))
+model.eval()
+
+# Perform image classification using the loaded weights
