@@ -1,37 +1,17 @@
-# Advanced Methods for Image Processing - Lab 3
+## Crop and Weed Segmentation Project
+#Context
+This project involves the segmentation of crops and weeds from images taken by a drone over crop fields. The task is to segment each pixel into either the background, a crop, or a weed. A dataset is provided, composed of a set of training images and masks (around 1400 images), a validation set of images and masks (around 450), and a testing set of images only (around 350 images). Additionally, a class to load the data is provided.
 
-## Introduction
-This is the code repository for the third lab on Image Denoising
+The data is available at the following location:
+/net/ens/am4ip/datasets/project-dataset
+Please change if you want to use.
 
-Gitlab pages are automatically generated from this repository, and include:
-- The lab instructions
-- A documentation of the API (generated from the docstrings)
+In this project, I have experimented with various loss functions and models to optimize the performance of the semantic segmentation task.
 
-Refer to [this page](https://gitlab.com/am4ip/am4ip-lab3) to access to the lab instructions. To configure
-your environment, please refer to the [Installation](#installation) section.
+For the loss functions, I have tried both Binary Cross Entropy (BCE) loss and Dice loss. BCE loss is a popular choice for binary classification problems, while Dice loss is often used for segmentation tasks as it is more sensitive to the overlap between the prediction and ground truth. I have also tried combining these two loss functions and adjusting their weights to see if a balance between them could improve the performance. The CombinedLoss class in src/am4ip/losses.py implements this combination.
 
+For the evaluation metric, I have used Intersection over Union (IoU), which is a common metric for measuring the accuracy of an object detector on a particular dataset. The EvaluateNetwork class in src/am4ip/metrics.py calculates this metric.
 
-## Installation
-An environment with a pre-configured Python + Torch installation using GPUs is available. Please follow
-[this link.](https://dept-info.labri.fr/~mansenca/public/CREMI_deeplearning_env.pdf)
+In terms of models, I have tried UNet, DeepLabv3, and FCN-ResNet50. UNet is a popular choice for biomedical image segmentation due to its good performance in terms of accuracy. DeepLabv3 and FCN-ResNet50 are both state-of-the-art models for semantic image segmentation, with DeepLabv3 being known for its encoder-decoder structure with atrous convolutions, and FCN-ResNet50 for its fully convolutional nature. The implementations of these models can be found in the UNet class in src/am4ip/models.py.
 
-Then, you have to add the [src](src) folder to your python path, so it can find the given API. In Linux
-it is done by running the following command, after replacing with the correct path (e.g., using pwd command
-in src folder): 
-```bash
-export PYTHONPATH = $PYTHONPATH:/absolute/path/to/src
-```
-Note that this should be done everytime if you are running scripts in a terminal.
-
-In a Jupyter Notebook (and even in a script), it can be done manually as follows:
-```python
-import sys
-sys.path.append("/absolute/path/to/src")
-```
-before doing any import of the am4ip library.
-
-One can also configure its IDE for the project.
-
-### In Pycharm:
-- right Click on the src folder
-- Mark Directory as > Sources Root
+Through these experiments, I aim to find the best combination of loss function and model for this specific task.
