@@ -17,5 +17,9 @@ In terms of models, I have tried UNet, DeepLabv3, and FCN-ResNet50. UNet is a po
 Through these experiments, I aim to find the best combination of loss function and model for this specific task.
 
 #Getting started
-<kbd> <br> [Download Weights][https://jm-pt.eu/wp-content/uploads/2024/01/weights.zip] <br> </kbd>
+<h3 align=”center”>
+
+Download the <a href=”https://jm-pt.eu/wp-content/uploads/2024/01/weights.zip" target=”_blank” rel=”noreferrer”>Weights</a> 👋
+
+</h3>
 
